@@ -1,5 +1,4 @@
 const { Telegraf } = require('telegraf');
-const fetch = require('node-fetch');
 const express = require('express');
 
 // Ваши API ключи
@@ -22,50 +21,18 @@ app.all('/webhook', (req, res) => {
 // Устанавливаем Webhook для Telegram
 bot.telegram.setWebhook(`${vercelUrl}/webhook`);
 
-// Функция для анализа текста через Google AI (анализ настроений)
-async function analyzeText(text) {
-  try {
-    console.log('Отправка запроса к Google API с текстом:', text);
-
-    const response = await fetch(`https://language.googleapis.com/v1/documents:analyzeSentiment?key=${googleApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        document: { type: 'PLAIN_TEXT', content: text },
-        encodingType: 'UTF8',
-      }),
-    });
-
-    console.log('Ответ Google API статус:', response.status);
-
-    if (!response.ok) {
-      console.error('Ошибка ответа Google API:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('Текст ошибки от Google API:', errorText);
-      throw new Error(`Ошибка Google API: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('Данные ответа Google API:', data);
-
-    if (!data.documentSentiment) {
-      console.error('Ответ Google API не содержит поля documentSentiment:', data);
-      throw new Error('Некорректный ответ Google API');
-    }
-
-    return data.documentSentiment;
-  } catch (error) {
-    console.error('Ошибка при обращении к Google API:', error);
-    throw error;
-  }
-}
-
-// Обработка входящих сообщений
+// Пример ответа на сообщение
 bot.on('text', async (ctx) => {
   try {
     const userMessage = ctx.message.text;
-    const sentiment = await analyzeText(userMessage);
-    ctx.reply(`Sentiment score: ${sentiment.score}, magnitude: ${sentiment.magnitude}`);
+    console.log(`Получено сообщение от пользователя: ${userMessage}`);
+
+    // Если пользователь отправил "Привет"
+    if (userMessage.toLowerCase() === 'привет') {
+      await ctx.reply('Привет! Чем могу помочь?');
+    } else {
+      await ctx.reply('Я вас не понял. Напишите "Привет".');
+    }
   } catch (error) {
     console.error('Ошибка при обработке сообщения:', error);
     ctx.reply('Произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте позже.');
