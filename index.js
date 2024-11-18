@@ -10,9 +10,15 @@ const bot = new Telegraf(telegramToken);
 const app = express();
 
 app.use(express.json()); // Для обработки JSON-запросов от Telegram
-app.use(bot.webhookCallback('/webhook')); // Обработка Webhook
 
-// Логирование всех запросов на /webhook для отладки
+// Логирование всех входящих запросов
+app.use((req, res, next) => {
+  console.log(`Получен запрос: ${req.method} ${req.originalUrl}`);
+  console.log('Тело запроса:', req.body);
+  next(); // Переход к следующему обработчику
+});
+
+// Обработчик для маршрута webhook
 app.all('/webhook', (req, res) => {
   console.log('Получен запрос на /webhook:', req.method, req.body);
   res.status(200).send('OK');
@@ -21,7 +27,7 @@ app.all('/webhook', (req, res) => {
 // Устанавливаем Webhook для Telegram
 bot.telegram.setWebhook(`${vercelUrl}/webhook`);
 
-// Пример ответа на сообщение
+// Простая обработка текстовых сообщений
 bot.on('text', async (ctx) => {
   try {
     const userMessage = ctx.message.text;
@@ -35,7 +41,7 @@ bot.on('text', async (ctx) => {
     }
   } catch (error) {
     console.error('Ошибка при обработке сообщения:', error);
-    ctx.reply('Произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте позже.');
+    ctx.reply('Произошла ошибка при обработке вашего сообщения.');
   }
 });
 
